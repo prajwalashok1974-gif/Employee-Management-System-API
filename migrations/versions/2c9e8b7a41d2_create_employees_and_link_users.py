@@ -18,21 +18,22 @@ def upgrade() -> None:
     op.create_table(
         "employees",
         sa.Column("id", sa.Integer(), primary_key=True),
-        sa.Column("name", sa.String(100), nullable=False),
-        sa.Column("email", sa.String(255), nullable=False),
-        sa.Column("phone", sa.String(20), nullable=True),
-        sa.Column("role", sa.String(100), nullable=False),
-        sa.Column("department", sa.String(100), nullable=False, server_default="Unassigned"),
+        sa.Column("name", sa.String(length=100), nullable=False),
+        sa.Column("email", sa.String(length=255), nullable=False),
+        sa.Column("phone", sa.String(length=20), nullable=True),
+        sa.Column("role", sa.String(length=100), nullable=False),
+        sa.Column("department", sa.String(length=100), nullable=False, server_default="Unassigned"),
         sa.Column("salary", sa.Integer(), nullable=False),
-        sa.Column("employment_type", sa.String(50), nullable=False, server_default="Full-time"),
-        sa.Column("status", sa.String(30), nullable=False, server_default="Active"),
+        sa.Column("employment_type", sa.String(length=50), nullable=False, server_default="Full-time"),
+        sa.Column("status", sa.String(length=30), nullable=False, server_default="Active"),
         sa.Column("hire_date", sa.Date(), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()")),
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()")),
-        sa.UniqueConstraint("email", name="uq_employees_email"),
     )
     op.create_index("ix_employees_id", "employees", ["id"], unique=False)
+    op.create_index("ix_employees_email", "employees", ["email"], unique=True)
 
+    # Existing values are stored as the strings "true" and "false".
     op.alter_column(
         "users",
         "is_active",
@@ -65,5 +66,6 @@ def downgrade() -> None:
         existing_nullable=False,
         postgresql_using="CASE WHEN is_active THEN 'true' ELSE 'false' END",
     )
+    op.drop_index("ix_employees_email", table_name="employees")
     op.drop_index("ix_employees_id", table_name="employees")
     op.drop_table("employees")
